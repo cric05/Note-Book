@@ -4,7 +4,7 @@ const mysql = require('mysql2');
 const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
-const twilio = require('twilio');
+//const twilio = require('twilio');
 const notifier = require('node-notifier'); 
 const sound = require('sound-play'); 
 const open = require('open'); 
@@ -14,7 +14,7 @@ const port = 3000;
 
 const ALARM_PATH = path.join(__dirname, 'public', 'alarm.mp3');
 
-// --- CONFIGURATION ---
+//  CONFIGURATION 
 const client = new twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 const twilioPhoneNumber = process.env.TWILIO_PHONE;
 
@@ -41,7 +41,7 @@ db.connect(err => {
     else console.log("✅ MySQL Connected");
 });
 
-// --- API ROUTES ---
+//  API ROUTES 
 app.get('/api/notes', (req, res) => {
     db.query("SELECT * FROM notes ORDER BY created_at DESC", (err, results) => {
         if(err) return res.status(500).json(err);
@@ -67,8 +67,6 @@ app.put('/api/notes/:id', (req, res) => {
     let sql, params;
 
     if(reminder_time) {
-        // --- FIX IS HERE ---
-        // We use .slice(0, 19) to remove the '.000Z' milliseconds that MySQL hates
         const formattedTime = reminder_time.slice(0, 19).replace('T', ' ');
         const rings = repeat_count || 1;
         
@@ -84,7 +82,7 @@ app.put('/api/notes/:id', (req, res) => {
 
     db.query(sql, params, (err, result) => {
         if(err) {
-            console.error("SQL Error:", err); // Log error to terminal so you can see it
+            console.error("SQL Error:", err); 
             return res.status(500).json(err);
         }
         res.json({ message: "Updated" });
@@ -98,7 +96,7 @@ app.delete('/api/notes/:id', (req, res) => {
     });
 });
 
-// --- HELPER: AUDIO PLAYER ---
+   //AUDIO PLAYER 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function playServerAlarm(rings) {
@@ -113,7 +111,7 @@ async function playServerAlarm(rings) {
     }
 }
 
-// --- BACKGROUND JOB ---
+// BACKGROUND JOB
 setInterval(() => {
     const now = new Date();
     const year = now.getFullYear();
@@ -150,18 +148,18 @@ setInterval(() => {
                 }
             });
 
-            // 3. Send SMS
-            if (note.phone && note.sms_sent === 0) {
-                client.messages.create({
-                    body: `REMINDER: ${note.title}`,
-                    from: twilioPhoneNumber,
-                    to: note.phone
-                })
-                .then(() => {
-                    db.query("UPDATE notes SET sms_sent = 1 WHERE id = ?", [note.id]);
-                })
-                .catch(e => console.error("SMS Failed"));
-            }
+            // // 3. Send SMS
+            // if (note.phone && note.sms_sent === 0) {
+            //     client.messages.create({
+            //         body: `REMINDER: ${note.title}`,
+            //         from: twilioPhoneNumber,
+            //         to: note.phone
+            //     })
+            //     .then(() => {
+            //         db.query("UPDATE notes SET sms_sent = 1 WHERE id = ?", [note.id]);
+            //     })
+            //     .catch(e => console.error("SMS Failed"));
+            // }
         });
     });
 }, 60000); 

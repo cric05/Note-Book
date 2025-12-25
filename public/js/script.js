@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// --- Fetch & Render ---
+//  Fetch & Render 
 async function fetchNotes() {
     const res = await fetch(API_URL);
     allNotes = await res.json();
@@ -51,7 +51,7 @@ function renderNotes(notes) {
 
         const fileBadge = note.file_path ? `<span style="font-size:0.8rem">📎</span>` : '';
         
-        // --- GREEN TEXT LOGIC ---
+        //  GREEN TEXT LOGIC 
         let timeBadge = '';
         if(note.reminder_time) {
             const date = new Date(note.reminder_time);
@@ -176,7 +176,7 @@ async function saveAndClose() {
     const fileInput = document.getElementById('fileInput');
     const hasFile = fileInput.files.length > 0;
 
-    // --- STRICT VALIDATION ---
+    // STRICT VALIDATION 
     console.log(`Title: "${title}", ContentEmpty: ${isContentEmpty}, HasFile: ${hasFile}`);
 
     if (!title && isContentEmpty && !hasFile) {
@@ -184,7 +184,6 @@ async function saveAndClose() {
         console.log("Save cancelled: validation failed.");
         return; // STOP EXECUTION HERE
     }
-    // -------------------------
 
     const contentHtml = quill.root.innerHTML;
     const repeatCount = document.getElementById('repeatInput').value;
@@ -254,7 +253,7 @@ function filterNotes() {
     renderNotes(filtered);
 }
 
-// --- Browser Notification & Sound Logic ---
+//  Browser Notification & Sound Logic
 function enableSound() {
     document.getElementById('alarmSound').play().catch(() => {});
     Notification.requestPermission();

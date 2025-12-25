@@ -8,15 +8,15 @@ body {
     font-family: 'Segoe UI', sans-serif;
     background-color: var(--bg-color);
     margin: 0;
-    padding: 15px; /* Less padding on mobile */
+    padding: 15px; 
     overflow-x: hidden;
-    padding-bottom: 80px; /* Space for FAB */
+    padding-bottom: 80px; 
 }
 
 /* Header & Search */
 header {
     display: flex;
-    flex-wrap: wrap; /* Allows wrapping on small phones */
+    flex-wrap: wrap; 
     justify-content: space-between;
     align-items: center;
     gap: 10px;
@@ -35,7 +35,7 @@ h1 { font-size: 1.5rem; margin: 0; }
     padding: 12px 20px;
     border-radius: 25px;
     border: 1px solid #ccc;
-    width: 100%; /* Full width container */
+    width: 100%; 
     max-width: 300px;
     transition: all 0.3s;
     outline: none;
@@ -61,14 +61,14 @@ h1 { font-size: 1.5rem; margin: 0; }
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     cursor: pointer;
     transition: transform 0.2s;
-    height: auto; /* Allow height to grow */
+    height: auto; 
     min-height: 150px;
     max-height: 250px;
     overflow: hidden;
     position: relative;
 }
 
-.note-card:active { transform: scale(0.98); } /* Click effect on touch */
+.note-card:active { transform: scale(0.98); } 
 
 .note-title { font-weight: bold; margin-bottom: 10px; font-size: 1.1em; display: flex; justify-content: space-between; }
 .note-preview { color: #666; font-size: 0.9em; line-height: 1.4; }
@@ -103,15 +103,15 @@ h1 { font-size: 1.5rem; margin: 0; }
     align-items: center;
     z-index: 1000;
     backdrop-filter: blur(5px);
-    padding: 10px; /* Gap from edges */
+    padding: 10px; 
     box-sizing: border-box;
 }
 
 .modal-content {
     background: white;
     width: 100%; 
-    max-width: 600px; /* Desktop max width */
-    max-height: 90vh; /* Scroll if too tall */
+    max-width: 600px; 
+    max-height: 90vh; 
     overflow-y: auto;
     padding: 20px;
     border-radius: 15px;
@@ -146,7 +146,7 @@ h1 { font-size: 1.5rem; margin: 0; }
 /* Footer / Tools */
 .modal-footer {
     display: flex;
-    flex-direction: column-reverse; /* Stack buttons on mobile */
+    flex-direction: column-reverse; 
     gap: 15px;
     margin-top: 10px;
     padding-top: 15px;
@@ -161,7 +161,7 @@ h1 { font-size: 1.5rem; margin: 0; }
     gap: 10px;
 }
 .tool-btn {
-    flex: 1; /* Buttons take equal width */
+    flex: 1; 
     padding: 12px;
     border: none;
     border-radius: 8px;
@@ -171,7 +171,7 @@ h1 { font-size: 1.5rem; margin: 0; }
 .tool-btn.save { background: var(--primary); color: white; }
 .tool-btn.delete { background: #ffebee; color: #d32f2f; }
 
-/* --- MOBILE SPECIFIC RULES --- */
+/*MOBILE SPECIFIC RULES */
 @media (min-width: 600px) {
     /* Desktop layout adjustments */
     .modal-footer {
