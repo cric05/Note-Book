@@ -4,13 +4,13 @@ let allNotes = [];
 let notifiedIds = new Set();
 let fpInstance; 
 
-// 1. Initialize Quill (Text Editor)
+// 1. Initialize Quill
 var quill = new Quill('#editor-container', {
     theme: 'snow',
     modules: { toolbar: [['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }]] }
 });
 
-// 2. Initialize Flatpickr (Date Picker)
+// 2. Initialize Flatpickr
 document.addEventListener('DOMContentLoaded', function() {
     fpInstance = flatpickr("#timeInput", {
         enableTime: true,
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-//  Fetch & Render 
+// --- Fetch & Render ---
 async function fetchNotes() {
     const res = await fetch(API_URL);
     allNotes = await res.json();
@@ -36,7 +36,7 @@ function renderNotes(notes) {
     const grid = document.getElementById('notesGrid');
     grid.innerHTML = '';
     
-    const now = new Date(); // Get current time
+    const now = new Date();
 
     notes.forEach(note => {
         const card = document.createElement('div');
@@ -44,33 +44,30 @@ function renderNotes(notes) {
         card.style.backgroundColor = note.color; // Keep user selected color
         card.onclick = () => openNote(note);
 
-        // Strip HTML for preview
         const tmp = document.createElement("DIV");
         tmp.innerHTML = note.content;
         const plainText = tmp.textContent || tmp.innerText || "";
 
         const fileBadge = note.file_path ? `<span style="font-size:0.8rem">📎</span>` : '';
         
-        //  GREEN TEXT LOGIC 
+        // --- GREEN TEXT LOGIC ---
         let timeBadge = '';
         if(note.reminder_time) {
             const date = new Date(note.reminder_time);
             const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             const dateStr = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
             
-            // Default: Red & Alarm Clock
-            let textColor = '#d32f2f'; 
+            // Check if alarm is done
+            let textColor = '#d32f2f'; // Default Red
             let icon = '⏰';
-
-            // If time has passed: Green & Checkmark
+            
             if (now >= date) {
-                textColor = '#2e7d32'; 
+                textColor = '#2e7d32'; // Green
                 icon = '✅';
             }
 
             timeBadge = `<div style="margin-top:5px; font-size:0.8rem; color:${textColor}; font-weight:bold;">${icon} ${dateStr}, ${timeStr}</div>`;
         }
-        // ------------------------
 
         card.innerHTML = `
             <div class="note-title">${note.title} ${fileBadge}</div>
@@ -88,7 +85,6 @@ function openNewNote() {
     document.getElementById('fileLabel').innerText = 'No file selected';
     document.getElementById('downloadLink').style.display = 'none';
     
-    // Reset Date & Repeat
     fpInstance.clear(); 
     document.getElementById('repeatInput').value = 1; 
     document.getElementById('countdownBox').innerHTML = '⏳ No alarm set';
@@ -164,31 +160,24 @@ function updateCountdown(dateStr) {
 }
 
 async function saveAndClose() {
-    console.log("Attempting to save..."); // DEBUG LOG
+    console.log("Attempting to save...");
 
     const id = document.getElementById('noteId').value;
     const title = document.getElementById('editTitle').value.trim();
-    
-    // Get text and strip ALL whitespace (spaces, tabs, newlines) to check emptiness
     const rawText = quill.getText();
     const isContentEmpty = rawText.trim().length === 0;
-    
     const fileInput = document.getElementById('fileInput');
     const hasFile = fileInput.files.length > 0;
 
-    // STRICT VALIDATION 
-    console.log(`Title: "${title}", ContentEmpty: ${isContentEmpty}, HasFile: ${hasFile}`);
-
     if (!title && isContentEmpty && !hasFile) {
-        alert("⚠️ Cannot save an empty note!\nPlease add a Title, Text, or File.");
-        console.log("Save cancelled: validation failed.");
-        return; // STOP EXECUTION HERE
+        alert("⚠️ Cannot save an empty note!");
+        return;
     }
 
     const contentHtml = quill.root.innerHTML;
     const repeatCount = document.getElementById('repeatInput').value;
 
-    // Time Logic
+    // --- GET TIME ---
     let timeInput = null;
     if(fpInstance.selectedDates.length > 0) {
         const date = fpInstance.selectedDates[0]; 
@@ -201,6 +190,12 @@ async function saveAndClose() {
     formData.append('content', contentHtml);
     formData.append('color', currentNoteColor);
     formData.append('repeat_count', repeatCount);
+    
+    // IMPORTANT: Send time if it exists
+    if (timeInput) {
+        formData.append('reminder_time', timeInput);
+    }
+
     if (hasFile) formData.append('document', fileInput.files[0]);
 
     try {
@@ -219,20 +214,19 @@ async function saveAndClose() {
                 });
             }
         } else {
-            // Create
+            // Create New
             await fetch(API_URL, { method: 'POST', body: formData });
         }
         
-        // Close and Refresh
         document.getElementById('noteModal').style.display = 'none';
         fetchNotes();
-        console.log("Save successful!");
         
     } catch (error) { 
         alert("Error saving"); 
         console.error(error); 
     }
 }
+
 async function deleteCurrentNote() {
     const id = document.getElementById('noteId').value;
     if(!id) return; 
@@ -253,7 +247,7 @@ function filterNotes() {
     renderNotes(filtered);
 }
 
-//  Browser Notification & Sound Logic
+// --- Browser Audio Logic ---
 function enableSound() {
     document.getElementById('alarmSound').play().catch(() => {});
     Notification.requestPermission();
@@ -279,8 +273,7 @@ setInterval(() => {
                         new Notification(`🔔 Due: ${note.title}`);
                     }
                     
-                    // 3. Refresh Grid (This makes the text turn green immediately)
-                    renderNotes(allNotes); 
+                    renderNotes(allNotes); // Update Text to Green
                 }
             }
         }
@@ -301,5 +294,4 @@ function playAlarmSequence(times) {
     play(); 
 }
 
-// Init
 fetchNotes();

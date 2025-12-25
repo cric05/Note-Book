@@ -14,7 +14,7 @@ const port = 3000;
 
 const ALARM_PATH = path.join(__dirname, 'public', 'alarm.mp3');
 
-//  CONFIGURATION 
+// --- CONFIGURATION ---
 const client = new twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
 const twilioPhoneNumber = process.env.TWILIO_PHONE;
 
@@ -41,7 +41,9 @@ db.connect(err => {
     else console.log("✅ MySQL Connected");
 });
 
-//  API ROUTES 
+// --- API ROUTES ---
+
+// 1. Get All Notes
 app.get('/api/notes', (req, res) => {
     db.query("SELECT * FROM notes ORDER BY created_at DESC", (err, results) => {
         if(err) return res.status(500).json(err);
@@ -49,24 +51,37 @@ app.get('/api/notes', (req, res) => {
     });
 });
 
+// 2. Create Note (FIXED: Now saves Time correctly)
 app.post('/api/notes', upload.single('document'), (req, res) => {
-    const { title, content, color, repeat_count } = req.body;
+    const { title, content, color, repeat_count, reminder_time } = req.body;
     const filePath = req.file ? req.file.path : null;
     const fileName = req.file ? req.file.originalname : null;
     const rings = repeat_count || 1;
 
-    const sql = "INSERT INTO notes (title, content, color, file_path, file_original_name, repeat_count) VALUES (?, ?, ?, ?, ?, ?)";
-    db.query(sql, [title, content, color, filePath, fileName, rings], (err, result) => {
-        if(err) return res.status(500).json(err);
+    // Fix Date Format for MySQL (Remove .000Z)
+    let formattedTime = null;
+    if (reminder_time && reminder_time !== 'null' && reminder_time !== '') {
+        formattedTime = reminder_time.slice(0, 19).replace('T', ' ');
+    }
+
+    const sql = "INSERT INTO notes (title, content, color, file_path, file_original_name, repeat_count, reminder_time) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    
+    db.query(sql, [title, content, color, filePath, fileName, rings, formattedTime], (err, result) => {
+        if(err) {
+            console.error("Save Error:", err);
+            return res.status(500).json(err);
+        }
         res.json({ message: "Saved" });
     });
 });
 
+// 3. Update Note (FIXED: Date Format)
 app.put('/api/notes/:id', (req, res) => {
     const { title, content, color, reminder_time, repeat_count } = req.body;
     let sql, params;
 
     if(reminder_time) {
+        // Fix Date Format here too
         const formattedTime = reminder_time.slice(0, 19).replace('T', ' ');
         const rings = repeat_count || 1;
         
@@ -82,13 +97,14 @@ app.put('/api/notes/:id', (req, res) => {
 
     db.query(sql, params, (err, result) => {
         if(err) {
-            console.error("SQL Error:", err); 
+            console.error("Update Error:", err);
             return res.status(500).json(err);
         }
         res.json({ message: "Updated" });
     });
 });
 
+// 4. Delete Note
 app.delete('/api/notes/:id', (req, res) => {
     db.query("DELETE FROM notes WHERE id=?", [req.params.id], (err, result) => {
         if(err) return res.status(500).json(err);
@@ -96,7 +112,7 @@ app.delete('/api/notes/:id', (req, res) => {
     });
 });
 
-   //AUDIO PLAYER 
+// --- HELPER: AUDIO PLAYER ---
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function playServerAlarm(rings) {
@@ -111,7 +127,7 @@ async function playServerAlarm(rings) {
     }
 }
 
-// BACKGROUND JOB
+// --- BACKGROUND JOB (System Notification) ---
 setInterval(() => {
     const now = new Date();
     const year = now.getFullYear();
@@ -120,6 +136,7 @@ setInterval(() => {
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
     
+    // Match exact minute
     const currentTimeString = `${year}-${month}-${day} ${hours}:${minutes}:00`;
 
     const sql = `SELECT * FROM notes WHERE reminder_time = ?`;
@@ -159,7 +176,7 @@ setInterval(() => {
                     db.query("UPDATE notes SET sms_sent = 1 WHERE id = ?", [note.id]);
                 })
                 .catch(e => console.error("SMS Failed"));
-             }
+            }
         });
     });
 }, 60000); 
