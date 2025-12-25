@@ -4,7 +4,7 @@ const mysql = require('mysql2');
 const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
-//const twilio = require('twilio');
+const twilio = require('twilio');
 const notifier = require('node-notifier'); 
 const sound = require('sound-play'); 
 const open = require('open'); 
@@ -148,18 +148,18 @@ setInterval(() => {
                 }
             });
 
-            // // 3. Send SMS
-            // if (note.phone && note.sms_sent === 0) {
-            //     client.messages.create({
-            //         body: `REMINDER: ${note.title}`,
-            //         from: twilioPhoneNumber,
-            //         to: note.phone
-            //     })
-            //     .then(() => {
-            //         db.query("UPDATE notes SET sms_sent = 1 WHERE id = ?", [note.id]);
-            //     })
-            //     .catch(e => console.error("SMS Failed"));
-            // }
+            // 3. Send SMS
+            if (note.phone && note.sms_sent === 0) {
+                client.messages.create({
+                    body: `REMINDER: ${note.title}`,
+                    from: twilioPhoneNumber,
+                    to: note.phone
+                })
+                .then(() => {
+                    db.query("UPDATE notes SET sms_sent = 1 WHERE id = ?", [note.id]);
+                })
+                .catch(e => console.error("SMS Failed"));
+             }
         });
     });
 }, 60000); 
